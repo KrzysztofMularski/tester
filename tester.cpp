@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -14,6 +15,14 @@ struct {
 } config;
 
 std::ofstream results_file;
+
+std::string getCurrentDateTime() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&currentTime), "%d-%m-%Y %H:%M:%S");
+    return ss.str();
+}
 
 void runProgram(const std::vector<std::string> &params) {
     std::cout << ">";
@@ -31,6 +40,8 @@ void runProgram(const std::vector<std::string> &params) {
     // Measure the execution time
     auto start_time = std::chrono::high_resolution_clock::now();
 
+    std::string timestampStart = getCurrentDateTime();
+
     // Open a pipe to capture the output of the command
     FILE *pipe = popen(command.c_str(), "r");
     if (!pipe) {
@@ -41,8 +52,12 @@ void runProgram(const std::vector<std::string> &params) {
     // Redirect the output of the command to the log file
     char buffer[128];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        results_file << buffer;
-        std::cout << buffer;
+        std::string timestampEnd = getCurrentDateTime();
+        std::string tester_fields = timestampStart + ";" + timestampEnd + ";" + command + ";";
+        results_file << tester_fields << buffer;
+        results_file.flush();
+        std::cout << tester_fields << buffer;
+        std::cout.flush();
     }
 
     // Calculate and display execution time

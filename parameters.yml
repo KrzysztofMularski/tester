@@ -6,7 +6,7 @@
 --omp-threads:
   - 0
 --repetitions:
-  - 2
+  - 20
 # local search specific params
 --jump-chance:
   - 0.1
