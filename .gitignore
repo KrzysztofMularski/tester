@@ -1,0 +1,7 @@
+*
+!*/
+!*.*
+*.txt
+!Makefile
+*.pgm
+*.csv
