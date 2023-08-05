@@ -36,12 +36,12 @@ param2: true
 ```
 
 ## Tester recursive
-There is a possibility of calling `tester` on `tester` itself. It allows to execute groups of commands.
+There is a possibility of calling `tester` on `tester` itself. It allows to execute groups of commands:
 ```
 tester tester params_tester.yml results.csv
 ```
-#### Parameters file consisting of names of other parameters files:
-```
+#### Parameter file containing the names of other parameter files:
+```yml
 # params_tester.yml:
 program:
 - local_search
@@ -56,7 +56,7 @@ kv:
 - --kv
 ```
 
-It will execute sequentially following commands:
+It will then execute sequentially following commands:
 ```
 ../local_search/local_search ./params_local_search1.yml ./results.csv --kv
 ../local_search/local_search ./params_local_search2.yml ./results.csv --kv
