@@ -24,6 +24,23 @@ std::string getCurrentDateTime() {
     return ss.str();
 }
 
+void runTester(const std::vector<std::string> &params) {
+    std::cout << ">";
+    for (const auto& param : params) {
+        std::cout << " " << param;
+    }
+    std::cout << std::endl;
+
+    // Construct the command to execute
+    std::string command = config.program_file;
+    for (const auto& param : params) {
+        command += " " + param;
+    }
+
+    // Execute the program
+    std::system(command.c_str());
+}
+
 void runProgram(const std::vector<std::string> &params) {
     std::cout << "Command: " << config.program_file;
     for (const auto &param : params) {
@@ -50,13 +67,13 @@ void runProgram(const std::vector<std::string> &params) {
     }
 
     // Redirect the output of the command to the log file
-    char buffer[128];
+    char buffer[2048];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
         std::string timestampEnd = getCurrentDateTime();
         std::string tester_fields = timestampStart + ";" + timestampEnd + ";" + command + ";";
         results_file << tester_fields << buffer;
         results_file.flush();
-        std::cout << "Iteration ended: " << timestampEnd << std::endl;
+        std::cout << "[" << timestampEnd << "] " << buffer;
         std::cout.flush();
         timestampStart = getCurrentDateTime();
     }
@@ -157,7 +174,11 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
             }
             idx /= param_values[j].size();
         }
-        runProgram(current_params);
+        if (config.program_file.find("tester") != std::string::npos) {
+            runTester(current_params);
+        } else {
+            runProgram(current_params);
+        }
     }
 }
 
@@ -175,27 +196,24 @@ int readArgs(int argc, char *argv[]) {
         std::cout << "                    instead of just 'value'" << std::endl;
         std::cout << std::endl;
         std::cout << "Examples:" << std::endl;
-        std::cout << "  tester local_search results.csv params_local_search.yml --kv" << std::endl;
-        std::cout << "  tester genetic results.csv params_genetic.yml" << std::endl;
-        // std::cout << "  tester tester results.csv params_tester.yml" << std::endl;
-
-        // tester tester results.csv params_tester.yml
+        std::cout << "  tester local_search params_local_search.yml results.csv --kv" << std::endl;
+        std::cout << "  tester genetic params_genetic.yml results.csv" << std::endl;
+        std::cout << "  tester tester params_tester.yml results.csv" << std::endl;
+        // tester tester params_tester.yml results.csv
         //
         // params_tester.yml:
         // program:
         // - local_search
-        // results:
-        // - results.csv
         // params:
         // - params_local_search1.yml
         // - params_local_search2.yml
         // - params_local_search3.yml
         // - params_local_search4.yml
+        // results:
+        // - results.csv
         // kv:
         // - --kv
         //
-        // tester local_search results.csv params_local_search1.yml --kv
-
         return 1;
     } else {
         config.program_file = std::string(argv[1]);
