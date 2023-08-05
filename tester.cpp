@@ -25,7 +25,7 @@ std::string getCurrentDateTime() {
 }
 
 void runProgram(const std::vector<std::string> &params) {
-    std::cout << ">";
+    std::cout << "Command: " << config.program_file;
     for (const auto &param : params) {
         std::cout << " " << param;
     }
@@ -56,15 +56,16 @@ void runProgram(const std::vector<std::string> &params) {
         std::string tester_fields = timestampStart + ";" + timestampEnd + ";" + command + ";";
         results_file << tester_fields << buffer;
         results_file.flush();
-        std::cout << tester_fields << buffer;
+        std::cout << "Iteration ended: " << timestampEnd << std::endl;
         std::cout.flush();
+        timestampStart = getCurrentDateTime();
     }
 
     // Calculate and display execution time
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end_time - start_time;
 
-    std::cout << "Execution time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "Execution time: " << duration.count() << " seconds" << std::endl << std::endl;
 
     // Check the status of the command
     int status = pclose(pipe);

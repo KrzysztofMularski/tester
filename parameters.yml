@@ -6,7 +6,7 @@
 --omp-threads:
   - 0
 --repetitions:
-  - 20
+  - 2
 # local search specific params
 --jump-chance:
   - 0.1
@@ -14,6 +14,8 @@
   - 0.01
 --memory-size:
   - 0
+  - 0.1
+  - 0.2
 # not affecting results other params
 --write-as-csv: true
 --random-seed: true

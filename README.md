@@ -18,3 +18,19 @@ tester local_search results.csv params_local_search.yml --kv
 ```
 tester genetic results.csv params_genetic.yml
 ```
+
+## Parameters file:
+Parameters are written in .yml format:
+
+### `param1` can have single or multiple options:
+```yml
+param1:
+  - 0.1
+  - 0.3
+  - 0.5
+```
+
+### `param2` can be written in one line - concise notation:
+```yml
+param2: true
+```
