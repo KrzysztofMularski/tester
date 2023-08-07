@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -12,9 +13,11 @@ struct {
     std::string results_file;
     std::string params_file;
     bool is_kv = false;
+    bool is_preview = false;
 } config;
 
 std::ofstream results_file;
+int command_num = 1;
 
 std::string getCurrentDateTime() {
     auto now = std::chrono::system_clock::now();
@@ -24,29 +27,22 @@ std::string getCurrentDateTime() {
     return ss.str();
 }
 
-void runTester(const std::vector<std::string> &params) {
-    std::cout << ">";
-    for (const auto& param : params) {
-        std::cout << " " << param;
-    }
-    std::cout << std::endl;
-
-    // Construct the command to execute
-    std::string command = config.program_file;
-    for (const auto& param : params) {
-        command += " " + param;
-    }
-
-    // Execute the program
-    std::system(command.c_str());
-}
-
-void runProgram(const std::vector<std::string> &params) {
-    std::cout << "Command: " << config.program_file;
+void showPreview(const std::vector<std::string> &params) {
+    std::cout << command_num << "> " << config.program_file;
     for (const auto &param : params) {
         std::cout << " " << param;
     }
     std::cout << std::endl;
+    command_num++;
+}
+
+void runProgram(const std::vector<std::string> &params) {
+    std::cout << command_num << "> " << config.program_file;
+    for (const auto &param : params) {
+        std::cout << " " << param;
+    }
+    std::cout << std::endl;
+    command_num++;
 
     // Construct the command to execute
     std::string command = config.program_file;
@@ -163,6 +159,7 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
     for (const auto &values : param_values) {
         total_combinations *= values.size();
     }
+    std::cout << "Total combinations: " << total_combinations << std::endl;
     std::vector<std::string> current_params(param_names.size(), "");
 
     for (int i = 0; i < total_combinations; ++i) {
@@ -174,8 +171,8 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
             }
             idx /= param_values[j].size();
         }
-        if (config.program_file.find("tester") != std::string::npos) {
-            runTester(current_params);
+        if (config.is_preview) {
+            showPreview(current_params);
         } else {
             runProgram(current_params);
         }
@@ -183,7 +180,7 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
 }
 
 int readArgs(int argc, char *argv[]) {
-    if (argc <= 3) {
+    if (argc < 4) {
         std::cout << "tester: too few arguments" << std::endl;
         std::cout << "Usage: tester <PROGRAM> <PARAMETERS_FILE> <RESULTS_FILE> [--kv]" << std::endl;
         std::cout << std::endl;
@@ -194,32 +191,32 @@ int readArgs(int argc, char *argv[]) {
         std::cout << "Options:" << std::endl;
         std::cout << "  --kv            ensure that parameters should be passed to program in 'key=value' format" << std::endl;
         std::cout << "                    instead of just 'value'" << std::endl;
+        std::cout << "  --preview       show list of commands that would be run with no '--preview' option provided" << std::endl;
         std::cout << std::endl;
         std::cout << "Examples:" << std::endl;
         std::cout << "  tester local_search params_local_search.yml results.csv --kv" << std::endl;
         std::cout << "  tester genetic params_genetic.yml results.csv" << std::endl;
-        std::cout << "  tester tester params_tester.yml results.csv" << std::endl;
-        // tester tester params_tester.yml results.csv
-        //
-        // params_tester.yml:
-        // program:
-        // - local_search
-        // params:
-        // - params_local_search1.yml
-        // - params_local_search2.yml
-        // - params_local_search3.yml
-        // - params_local_search4.yml
-        // results:
-        // - results.csv
-        // kv:
-        // - --kv
-        //
+
         return 1;
     } else {
         config.program_file = std::string(argv[1]);
         config.params_file = std::string(argv[2]);
         config.results_file = std::string(argv[3]);
-        config.is_kv = argc >= 5 && std::string(argv[4]) == "--kv";
+        for (int i=4; i < argc; i++) {
+            if (strcmp(argv[i], "--kv") == 0) {
+                config.is_kv = true;
+            } else if (strcmp(argv[i], "--preview") == 0) {
+                config.is_preview = true;
+            }
+        }
+
+        std::cout << "Config:" << std::endl;
+        std::cout << "- config.program_file: " << config.program_file << std::endl;
+        std::cout << "- config.params_file: " << config.params_file << std::endl;
+        std::cout << "- config.config.results_file: " << config.results_file << std::endl;
+        std::cout << "- config.is_kv: " << std::boolalpha << config.is_kv << std::endl;
+        std::cout << "- config.is_preview: " << std::boolalpha << config.is_preview << std::endl;
+
         return 0;
     }
     return 1;
@@ -245,15 +242,19 @@ int main(int argc, char *argv[]) {
         param_values.push_back(param.second);
     }
 
-    results_file.open(config.results_file, std::ios::app);
-    if (!results_file) {
-        std::cerr << "Error opening results file!" << std::endl;
-        return 1;
+    if (!config.is_preview) {
+        results_file.open(config.results_file, std::ios::app);
+        if (!results_file) {
+            std::cerr << "Error opening results file!" << std::endl;
+            return 1;
+        }
     }
 
     generateCombinations(param_names, param_values, config.is_kv);
 
-    results_file.close();
+    if (!config.is_preview) {
+        results_file.close();
+    }
 
     return 0;
 }

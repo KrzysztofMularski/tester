@@ -1,9 +1,0 @@
-program:
-  - ../local_search/local_search
-params:
-  - ./params_local_search1.yml
-  - ./params_local_search2.yml
-results:
-  - ./results.csv
-kv:
-  - --kv
