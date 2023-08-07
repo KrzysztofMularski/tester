@@ -13,10 +13,10 @@ Testing `PROGRAM` by executing all combinations of parameters from `PARAMETERS_F
 
 ## Examples:
 ```
-tester local_search results.csv params_local_search.yml --kv
+tester local_search params_local_search.yml results.csv --kv
 ```
 ```
-tester genetic results.csv params_genetic.yml
+tester genetic params_genetic.yml results.csv
 ```
 
 ## Parameters file:
