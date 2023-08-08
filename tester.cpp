@@ -14,6 +14,8 @@ struct {
     std::string params_file;
     bool is_kv = false;
     bool is_preview = false;
+    bool is_command_id = false;
+    int command_id = -1;
 } config;
 
 std::ofstream results_file;
@@ -154,7 +156,7 @@ std::vector<std::pair<std::string, std::vector<std::string>>> parseYAML(const st
 }
 
 // Function to generate all possible combinations of parameters
-void generateCombinations(const std::vector<std::string> &param_names, const std::vector<std::vector<std::string>> &param_values, bool is_kv) {
+void generateCombinations(const std::vector<std::string> &param_names, const std::vector<std::vector<std::string>> &param_values) {
     size_t total_combinations = 1;
     for (const auto &values : param_values) {
         total_combinations *= values.size();
@@ -162,11 +164,24 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
     std::cout << "Total combinations: " << total_combinations << std::endl;
     std::vector<std::string> current_params(param_names.size(), "");
 
-    for (int i = 0; i < total_combinations; ++i) {
+    std::string timestampStart = getCurrentDateTime();
+
+    std::cout << "[" << timestampStart << "] Starting" << std::endl;
+
+    int i_start = 0;
+    if (config.is_command_id) {
+        if (config.command_id < 1 || config.command_id > total_combinations) {
+            std::cout << "Command id should be in range: [1, " << total_combinations << "] but got: " << config.command_id << std::endl;
+            return;
+        }
+        i_start = config.command_id - 1;
+        command_num = config.command_id;
+    }
+    for (int i = i_start; i < total_combinations; ++i) {
         int idx = i;
         for (int j = param_values.size() - 1; j >= 0; --j) {
             current_params[j] = param_values[j][idx % param_values[j].size()];
-            if (is_kv) {
+            if (config.is_kv) {
                 current_params[j] = param_names[j] + "=" + current_params[j];
             }
             idx /= param_values[j].size();
@@ -182,7 +197,7 @@ void generateCombinations(const std::vector<std::string> &param_names, const std
 int readArgs(int argc, char *argv[]) {
     if (argc < 4) {
         std::cout << "tester: too few arguments" << std::endl;
-        std::cout << "Usage: tester <PROGRAM> <PARAMETERS_FILE> <RESULTS_FILE> [--kv]" << std::endl;
+        std::cout << "Usage: tester <PROGRAM> <PARAMETERS_FILE> <RESULTS_FILE> [OPTION]..." << std::endl;
         std::cout << std::endl;
         std::cout << "Testing PROGRAM by executing all combinations of parameters from PARAMETERS_FILE and saving" << std::endl;
         std::cout << "results in the RESULTS_FILE in .csv format. Program itself must write csv lines to stdin and" << std::endl;
@@ -192,34 +207,47 @@ int readArgs(int argc, char *argv[]) {
         std::cout << "  --kv            ensure that parameters should be passed to program in 'key=value' format" << std::endl;
         std::cout << "                    instead of just 'value'" << std::endl;
         std::cout << "  --preview       show list of commands that would be run with no '--preview' option provided" << std::endl;
+        std::cout << "  --id=ID         from which command (combination) should start (call --preview to make sure which" << std::endl;
+        std::cout << "                    command has which number)" << std::endl;
         std::cout << std::endl;
         std::cout << "Examples:" << std::endl;
         std::cout << "  tester local_search params_local_search.yml results.csv --kv" << std::endl;
         std::cout << "  tester genetic params_genetic.yml results.csv" << std::endl;
 
         return 1;
-    } else {
-        config.program_file = std::string(argv[1]);
-        config.params_file = std::string(argv[2]);
-        config.results_file = std::string(argv[3]);
-        for (int i=4; i < argc; i++) {
-            if (strcmp(argv[i], "--kv") == 0) {
-                config.is_kv = true;
-            } else if (strcmp(argv[i], "--preview") == 0) {
-                config.is_preview = true;
-            }
-        }
-
-        std::cout << "Config:" << std::endl;
-        std::cout << "- config.program_file: " << config.program_file << std::endl;
-        std::cout << "- config.params_file: " << config.params_file << std::endl;
-        std::cout << "- config.config.results_file: " << config.results_file << std::endl;
-        std::cout << "- config.is_kv: " << std::boolalpha << config.is_kv << std::endl;
-        std::cout << "- config.is_preview: " << std::boolalpha << config.is_preview << std::endl;
-
-        return 0;
     }
-    return 1;
+    config.program_file = std::string(argv[1]);
+    config.params_file = std::string(argv[2]);
+    config.results_file = std::string(argv[3]);
+
+    for (int i = 4; i < argc; ++i) {
+        std::string option = argv[i];
+        if (option == "--kv") {
+            config.is_kv = true;
+        } else if (option == "--preview") {
+            config.is_preview = true;
+        } else if (option.find("--id=") == 0) {
+            if (option.size() <= 5) {
+                std::cout << "After '--id=' should be a number, e.g. '--id=12'" << std::endl;
+                return 1;
+            }
+            config.is_command_id = true;
+            config.command_id = std::stoi(option.substr(5));
+        }
+    }
+
+    std::cout << "Config:" << std::endl;
+    std::cout << "- config.program_file: " << config.program_file << std::endl;
+    std::cout << "- config.params_file: " << config.params_file << std::endl;
+    std::cout << "- config.config.results_file: " << config.results_file << std::endl;
+    std::cout << "- config.is_kv: " << std::boolalpha << config.is_kv << std::endl;
+    std::cout << "- config.is_preview: " << std::boolalpha << config.is_preview << std::endl;
+    std::cout << "- config.is_command_id: " << std::boolalpha << config.is_command_id << std::endl;
+    if (config.is_command_id) {
+        std::cout << "  - config.command_id: " << config.command_id << std::endl;
+    }
+
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -250,7 +278,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    generateCombinations(param_names, param_values, config.is_kv);
+    generateCombinations(param_names, param_values);
 
     if (!config.is_preview) {
         results_file.close();

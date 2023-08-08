@@ -13,6 +13,7 @@ Parameter|Description
 ---|---
 `--kv`            |ensure that parameters should be passed to program in `key=value` format instead of just `value`
 `--preview`       |show list of commands that would be run with no '--preview' option provided
+`--id=ID`         |from which command (combination) should start (call --preview to make sure which command has which number)
 
 ## Examples:
 ```
