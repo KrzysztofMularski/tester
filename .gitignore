@@ -5,3 +5,4 @@
 !Makefile
 *.pgm
 *.csv
+results

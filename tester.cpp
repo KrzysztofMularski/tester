@@ -217,8 +217,20 @@ int readArgs(int argc, char *argv[]) {
         return 1;
     }
     config.program_file = std::string(argv[1]);
+    if (config.program_file[0] == '-') {
+        std::cout << "Your program file starts with '-': " << config.program_file << std::endl;
+        return 1;
+    }
     config.params_file = std::string(argv[2]);
+    if (config.params_file[0] == '-') {
+        std::cout << "Your parameters file starts with '-': " << config.params_file << std::endl;
+        return 1;
+    }
     config.results_file = std::string(argv[3]);
+    if (config.results_file[0] == '-') {
+        std::cout << "Your results file starts with '-': " << config.results_file << std::endl;
+        return 1;
+    }
 
     for (int i = 4; i < argc; ++i) {
         std::string option = argv[i];

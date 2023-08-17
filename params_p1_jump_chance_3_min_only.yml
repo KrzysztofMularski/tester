@@ -1,0 +1,32 @@
+# general params
+--trajectory:
+  - ../local_search/trajectories/100_5ns_trajectory.pdb
+  - ../local_search/trajectories/100_15ns_trajectory.pdb
+  - ../local_search/trajectories/303_5ns_trajectory.pdb
+  - ../local_search/trajectories/303_15ns_trajectory.pdb
+--time-limit:
+  - 3
+--omp-threads:
+  - 2
+--repetitions:
+  - 10
+# local search specific params
+--jump-chance:
+  - 0
+  - 0.1
+  - 0.2
+  - 0.5
+  - 0.8
+  - 1.0
+--random-frame-chance:
+  - 0.01
+--memory-size:
+  - 0.1
+# not affecting results other params
+--write-as-csv: true
+--random-seed: true
+--matrix-size: -1
+--show-logs: false
+--show-rmsd-counter: false
+--show-current-best: false
+--show-route-best: false
